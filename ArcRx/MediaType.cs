@@ -35,7 +35,7 @@ namespace ArcRx
     public abstract class MediaType<T> : MediaType
         where T : MediaType<T>
     {
-        public override decimal RelativeQualitativeFactor => 1.0m;
+        public override decimal RelativeQualitativeFactor => 1.0m;  
 
         public abstract class Representation : MediaType.Representation<T>,
             Compatible

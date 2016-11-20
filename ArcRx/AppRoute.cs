@@ -44,7 +44,7 @@ namespace ArcRx
             public virtual AppState Consider(Token token) => null;
             protected abstract Representation GetRepresentation(HttpContextEx context);
 
-            public virtual Representation ApplyUknown<T>(T method, HttpContext ctx)
+            public virtual Representation ApplyUknown<T>(T method, HttpContextEx ctx)
             where T : RequestMethod
             {
                 return new AdHocRepresentation(c =>
@@ -112,17 +112,17 @@ namespace ArcRx
         public void Init(HttpApplication app) => (this.app = app).PostResolveRequestCache += MapRequest;
 
         protected abstract AppState GetRoot(HttpContext context);
-        protected virtual AppState TranslateNull(HttpContext context, AppState appState, Token token) => appState ?? new MessageNotUnderstood(context, token);
-        protected abstract MessageAnalysis GetMessageAnalysis(HttpContext context);
+        protected virtual AppState TranslateNull(HttpContextEx context, AppState appState, Token token) => appState ?? new MessageNotUnderstood(context, token);
+        protected abstract MessageAnalysis GetMessageAnalysis(HttpContextEx context);
 
-        protected virtual RequestMethod GetMethod(HttpContext ctx)
+        protected virtual RequestMethod GetMethod(HttpContextEx ctx)
         {
             return new AbstractStandardMethod(ctx);
         }
 
         protected virtual void MapRequest(object sender, EventArgs e)
         {
-            var context = app.Context;
+            var context = (HttpContextEx)app.Context;
 
             foreach (var message in GetMessageAnalysis(context))
             {
@@ -146,6 +146,9 @@ namespace ArcRx
                     try
                     {
                         var rep = GetMethod(context).Apply(curr, context);
+
+
+                        var media_types = context.Request.AcceptTypes;
 
                         context.RemapHandler(rep);                        
                     }
@@ -226,24 +229,24 @@ namespace ArcRx
 
     public abstract class UrlAppRoute : AppRoute<MessageToken>
     {
-        protected override MessageAnalysis GetMessageAnalysis(HttpContext context) => new DefaultMessageAnalysis(context);
+        protected override MessageAnalysis GetMessageAnalysis(HttpContextEx context) => new DefaultMessageAnalysis(context);
 
         protected sealed class DefaultMessageAnalysis : MessageAnalysis
         {
-            readonly HttpContext context;
+            readonly HttpContextEx context;
 
             static readonly RecognizedMessageEnumeration empty_enumeration_of_recognized_messages = new EmptyRecognizedMessage();
 
-            public DefaultMessageAnalysis(HttpContext context)
+            public DefaultMessageAnalysis(HttpContextEx context)
             {
                 this.context = context;
             }
 
             sealed class MessageComposedOfURLSegments : RecognizedMessage
             {
-                readonly HttpContext context;
+                readonly HttpContextEx context;
 
-                public MessageComposedOfURLSegments(HttpContext context)
+                public MessageComposedOfURLSegments(HttpContextEx context)
                 {
                     this.context = context;
                 }
@@ -259,12 +262,12 @@ namespace ArcRx
 
                     readonly string[] segments;
 
-                    readonly HttpContext context;
+                    readonly HttpContextEx context;
                     int state = -1;
 
                     readonly MessageToken token;
 
-                    public Enumeration(HttpContext context)
+                    public Enumeration(HttpContextEx context)
                     {
                         this.segments = context.Request.Url.AbsolutePath.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
 
@@ -302,10 +305,10 @@ namespace ArcRx
 
             sealed class MessageComposedOfURLSegmentsEnumeration : RecognizedMessageEnumeration
             {
-                readonly HttpContext context;
+                readonly HttpContextEx context;
                 byte state;
 
-                public MessageComposedOfURLSegmentsEnumeration(HttpContext context)
+                public MessageComposedOfURLSegmentsEnumeration(HttpContextEx context)
                 {
                     this.context = context;
                 }

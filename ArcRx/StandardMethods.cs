@@ -23,7 +23,7 @@ namespace ArcRx
                 ["CONNECT"] = Connect.Instance,
             };
 
-        public virtual Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx)
+        public virtual Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx)
         {
             return exp.ApplyUknown(this, ctx);
         }
@@ -39,7 +39,7 @@ namespace ArcRx
     {
         readonly RequestMethod method;
 
-        public AbstractStandardMethod(HttpContext ctx)
+        public AbstractStandardMethod(HttpContextEx ctx)
         {
             RequestMethod.memo.TryGetValue(ctx.Request.HttpMethod, out method);
         }
@@ -52,25 +52,25 @@ namespace ArcRx
     public sealed class Get : StandardMethod<Get>
     {
         public interface Allowed { Representation Accept(Get method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
     public sealed class Head : StandardMethod<Head>
     {
         public interface Allowed { Representation Accept(Head method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
     public sealed class Delete : StandardMethod<Delete>
     {
         public interface Allowed { Representation Accept(Delete method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
     public sealed class Connect : StandardMethod<Connect>
     {
         public interface Allowed { Representation Accept(Connect method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
     public sealed class Post : StandardMethod<Post>
@@ -142,18 +142,18 @@ namespace ArcRx
         }
 
         public interface Allowed { Representation Accept(Post method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx) => (exp as Allowed)?.Accept(this, new AntiForgeryGuarded<T>(ctx, exp)) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, new AntiForgeryGuarded<T>(ctx, exp)) ?? exp.ApplyUknown(this, ctx);
     }
 
     public sealed class Trace : StandardMethod<Trace>
     {
         public interface Allowed { Representation Accept(Trace method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
     public sealed class Put : StandardMethod<Put>
     {
         public interface Allowed { Representation Accept(Put method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContext ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 }

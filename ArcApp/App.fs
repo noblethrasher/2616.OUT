@@ -49,8 +49,7 @@
             inherit post()
                 override x.GetRedirectRepresentation ctx = 
                     
-                    let k  = read {
-                                    let req =  ctx.Request
+                    let k  = read { let req =  ctx.Request
                             
                                     let! id = req.get_non_negative_int "id"
                                     let! friends = req.get_non_empty_int_list "friends"
@@ -96,6 +95,14 @@
                         | "baz" -> Baz() :> appstate
                         | "jay" -> Jay() :> appstate
                         | "scoob" -> { new page() with override x.GetRepresentation ctx = new Scoobie("Buffy Summers", "The Slayer", [1; 3; 7; 99]) |> rep } :> appstate
+                        | "types" ->
+                            
+                            { new page() with
+                                  override x.GetRepresentation ctx = 
+                                    ctx.Request.AcceptTypes 
+                                    |> (fun xs -> System.String.Join(",", xs)) 
+                                    |> write } :> appstate
+
                         | _ ->  null
                                 
                 override x.GetRepresentation ctx = AdHocRepresentation((fun c -> c.Response.Write("Foo!!!")))  :> Representation

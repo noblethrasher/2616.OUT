@@ -39,17 +39,19 @@ namespace ArcRx
             {
                 get
                 {
-                    var requested_types = new List<string>();
+                    IReadOnlyList<string> custom_request;
 
-                    var enumerator = (requested_types = context.Items["REQUESTED_MIME_TYPES"] as List<string>)?.GetEnumerator();
+                    var all_requested_types = new List<string>();
+
+                    var enumerator = (custom_request = context.Items["REQUESTED_MIME_TYPES"] as IReadOnlyList<string>)?.GetEnumerator();
 
                     while(enumerator?.MoveNext() == true)
-                        requested_types.Add(enumerator?.Current);
+                        all_requested_types.Add(enumerator?.Current);
 
                     foreach (var type in request.AcceptTypes)
-                        requested_types.Add(type);
+                        all_requested_types.Add(type);
 
-                    return requested_types.ToArray();
+                    return all_requested_types.ToArray();
                 }
             }
 
@@ -393,7 +395,7 @@ namespace ArcRx
 
         public override void RemapHandler(IHttpHandler handler) => context.RemapHandler(handler);
 
-        public override HttpRequestBase Request => context.Request;
+        public override HttpRequestBase Request => new HttpRequest(this.context, this.context.Request);
 
         public override HttpResponseBase Response => context.Response;
 
