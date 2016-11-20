@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,12 +56,16 @@ namespace ArcRx
             }
         }
 
-        public /*unsealed*/ class MessageNotUnderstood : AppState
+        public /*unsealed*/ class MessageNotUnderstood : AppState, Get.Allowed, Post.Allowed
         {
             public MessageNotUnderstood(HttpContextEx ctx, Token t)
             {
 
             }
+
+            public Representation Accept(Get method, HttpContextEx ctx) => GetRepresentation(ctx);
+            public Representation Accept(Post methid, HttpContextEx ctx) => GetRepresentation(ctx);
+            
 
             public override AppState Consider(Token token) => this;
 
@@ -81,6 +86,8 @@ namespace ArcRx
         public virtual bool IsReusable => false;
 
         public abstract void ProcessRequest(HttpContext context);
+
+        public T Become<T>() where T : class => this as T;
 
         public virtual Representation GetNegotiatedRepresentation(MediaType media_type) => media_type.Convert(this);
 
@@ -109,8 +116,47 @@ namespace ArcRx
 
         public void Dispose() { }
 
-        public void Init(HttpApplication app) => (this.app = app).PostResolveRequestCache += MapRequest;
+        protected virtual IEnumerable<KeyValuePair<string, MediaType>> GetRecognizedMimeTypes()
+        {
 
+            var app_domain = AppDomain.CurrentDomain;
+
+            var asms = app_domain.GetAssemblies();
+
+            var types = from asm in asms
+                        from type in asm.GetTypes()
+                        let mt = type.GetCustomAttribute<RecognizedMimeTypeAttribute>()
+                        where mt != null
+                        select new { type, mt };
+
+
+            var xs = new List<KeyValuePair<string, MediaType>>();
+
+            foreach (var t in types)
+            {
+                var media_type = (MediaType)t.type.GetConstructor(Type.EmptyTypes).Invoke(null);
+
+                foreach (var type in t.mt.MimeTypes)
+                    yield return new KeyValuePair<string, MediaType>(type, media_type);
+            }
+        }
+
+        public void Init(HttpApplication app)
+        {
+            var mime_mapping_cache = new Dictionary<string, MediaType>();
+
+            foreach (var type in GetRecognizedMimeTypes())
+                mime_mapping_cache.Add(type.Key, type.Value);
+
+            app.Application.Add("MIME_MAPPING_MEMO", mime_mapping_cache);
+
+
+            (this.app = app).PostResolveRequestCache += MapRequest;
+
+            
+        }
+
+        
         protected abstract AppState GetRoot(HttpContext context);
         protected virtual AppState TranslateNull(HttpContextEx context, AppState appState, Token token) => appState ?? new MessageNotUnderstood(context, token);
         protected abstract MessageAnalysis GetMessageAnalysis(HttpContextEx context);
@@ -147,8 +193,31 @@ namespace ArcRx
                     {
                         var rep = GetMethod(context).Apply(curr, context);
 
+                        var mime_mapping = app.Application.Get("MIME_MAPPING_MEMO") as Dictionary<string, MediaType>;
 
-                        var media_types = context.Request.AcceptTypes;
+                        if(mime_mapping !=null)
+                        {
+                            var requested_types = context.Request.AcceptTypes;
+
+                            var media_type_objects = new List<MediaType>();
+
+                            foreach (var type in requested_types)
+                            {
+                                MediaType media_type_obj = null;
+
+                                if (mime_mapping.TryGetValue(type, out media_type_obj))
+                                {
+                                    var alt = rep.GetNegotiatedRepresentation(media_type_obj);
+
+                                    if(alt !=null)
+                                    {
+                                        rep = alt;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
 
                         context.RemapHandler(rep);                        
                     }

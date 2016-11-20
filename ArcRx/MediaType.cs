@@ -1,8 +1,30 @@
 ﻿using System;
 using System.Web;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace ArcRx
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class RecognizedMimeTypeAttribute : Attribute
+    {
+        readonly IReadOnlyList<string> types;
+
+        public IEnumerable<string> MimeTypes => from type in types select type;
+        
+        public RecognizedMimeTypeAttribute(string atype, params string[] options)
+        {
+            var types = new string[1 + options.Length];
+
+            types[0] = atype;
+
+            for (var i = 0; i < options.Length; i++)
+                types[i + 1] = options[i];
+
+            this.types = types;
+        }
+    }
+
     public sealed class ExplicitlyQualifiedMediaType<T> : MediaType
         where T : MediaType
     {
@@ -66,6 +88,7 @@ namespace ArcRx
         }
     }
 
+    [RecognizedMimeType("text/plain")]
     public sealed class PlainText : MediaType<PlainText>
     {
         public new abstract class Representation : MediaType<PlainText>.Representation
@@ -79,6 +102,7 @@ namespace ArcRx
         }
     }
 
+    [RecognizedMimeType("text/html")]
     public sealed class Html : MediaType<Html>
     {
         public new abstract class Representation : MediaType<Html>.Representation
@@ -92,6 +116,7 @@ namespace ArcRx
         }
     }
 
+    [RecognizedMimeType("application/xhtml+xml", "application/xhtml")]
     public sealed class XHtml : MediaType<XHtml>
     {
         public new abstract class Representation : MediaType<XHtml>.Representation

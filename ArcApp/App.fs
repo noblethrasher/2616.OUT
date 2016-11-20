@@ -2,8 +2,37 @@
     
    open System
    open System.Web
+   open System.Collections.Generic
     
    type appstate = AppRoute.AppState<MessageToken>     
+   
+
+   [<RecognizedMimeTypeAttribute(".foo")>]
+   type FooType() =
+    inherit MediaType<FooType>()
+
+        override x._Convert rep = 
+
+            match rep.become<MediaType.Compatible<FooType>>()
+                with
+                | Some compat -> compat.Convert(x)
+                | None ->  null
+            
+   
+   type FooRepresentation() =
+    inherit MediaType.Representation<FooType>()
+        
+        override x.ContentType with get() = "text/foo"
+
+        override x._ProcessRequest ctx = 
+            ctx.Response.Write("I am now a foo.")
+   
+
+
+   
+            
+    
+   
    
    [<AbstractClass>]
    type page() =
@@ -86,6 +115,9 @@
             inherit page()
                 override x.GetRepresentation ctx = Arc.vb.Represent(Arc.vb.HelloScooby(3)) :> Representation
 
+        
+        
+        
         type Foo() =
             inherit page()
                 
@@ -95,17 +127,45 @@
                         | "baz" -> Baz() :> appstate
                         | "jay" -> Jay() :> appstate
                         | "scoob" -> { new page() with override x.GetRepresentation ctx = new Scoobie("Buffy Summers", "The Slayer", [1; 3; 7; 99]) |> rep } :> appstate
+                        
+                        | "test"->
+                            
+                            let get_rep ctx = 
+                                
+                                { new Representation() with
+                                    override x.ProcessRequest ctx = ctx.Response.Write("yep...") 
+                                                    
+                                  interface MediaType.Compatible<FooType> with
+                                    member x.Convert (mt) = new FooRepresentation() :> MediaType.Representation<FooType> }
+
+                            { new appstate() with
+                                override x.GetRepresentation ctx = get_rep ctx
+                                                      
+                              interface Get.Allowed with
+                                    member x.Accept (g, c) = get_rep c }
+                        
+                        
                         | "types" ->
                             
                             { new page() with
+                                  
                                   override x.GetRepresentation ctx = 
                                     ctx.Request.AcceptTypes 
-                                    |> (fun xs -> System.String.Join(",", xs)) 
+                                    |> (fun xs -> System.String.Join(",", xs) + " " + 
+                                                    (seq { for kv in (ctx.Application.Get("MIME_MAPPING_MEMO") :?> Dictionary<string, MediaType>) -> kv.Key } 
+                                                        |> Seq.toArray 
+                                                        |> (fun xs -> String.Join(" ", xs))))
+                                    
                                     |> write } :> appstate
+                                    
+                                  
 
                         | _ ->  null
                                 
                 override x.GetRepresentation ctx = AdHocRepresentation((fun c -> c.Response.Write("Foo!!!")))  :> Representation
+
+                interface MediaType.Compatible<FooType> with
+                    member x.Convert mt = FooRepresentation() :> MediaType.Representation<FooType>
 
         type Root() =
             inherit page()

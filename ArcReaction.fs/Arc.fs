@@ -7,6 +7,13 @@
     [<AutoOpen>]
     module ArcReaction =
 
+        type Representation with
+            member x.become<'a when 'a : not struct and 'a : null and 'a : equality> () =
+                let result = x.Become<'a>()
+
+                if result <> null then Some result else None
+        
+        
         let inline str o = o.ToString()
 
         let (|Int|NonNegativeInt|Word|Guid|) obj =
