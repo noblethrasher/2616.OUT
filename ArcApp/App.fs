@@ -26,10 +26,6 @@
 
         override x._ProcessRequest ctx = 
             ctx.Response.Write("I am now a foo.")
-   
-
-
-   
             
     
    

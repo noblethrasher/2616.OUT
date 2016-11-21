@@ -45,13 +45,20 @@ namespace ArcRx
 
                     var enumerator = (custom_request = context.Items["REQUESTED_MIME_TYPES"] as IReadOnlyList<string>)?.GetEnumerator();
 
-                    while(enumerator?.MoveNext() == true)
-                        all_requested_types.Add(enumerator?.Current);
+                    try
+                    {
+                        while (enumerator?.MoveNext() == true)
+                            all_requested_types.Add(enumerator?.Current);
 
-                    foreach (var type in request.AcceptTypes)
-                        all_requested_types.Add(type);
+                        foreach (var type in request.AcceptTypes)
+                            all_requested_types.Add(type);
 
-                    return all_requested_types.ToArray();
+                        return all_requested_types.ToArray();
+                    }
+                    finally
+                    {
+                        enumerator?.Dispose();
+                    }
                 }
             }
 

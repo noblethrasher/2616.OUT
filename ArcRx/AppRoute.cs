@@ -58,13 +58,18 @@ namespace ArcRx
 
         public /*unsealed*/ class MessageNotUnderstood : AppState, Get.Allowed, Post.Allowed
         {
-            public MessageNotUnderstood(HttpContextEx ctx, Token t)
-            {
+            protected readonly HttpContextEx context;
+            protected readonly Token token;
 
+
+            public MessageNotUnderstood(HttpContextEx context, Token t)
+            {
+                this.context = context;
+                this.token = t;
             }
 
             public Representation Accept(Get method, HttpContextEx ctx) => GetRepresentation(ctx);
-            public Representation Accept(Post methid, HttpContextEx ctx) => GetRepresentation(ctx);
+            public Representation Accept(Post method, HttpContextEx ctx) => GetRepresentation(ctx);
             
 
             public override AppState Consider(Token token) => this;
