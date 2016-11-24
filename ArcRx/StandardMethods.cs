@@ -1,4 +1,8 @@
-﻿using System;
+﻿//Author:Rodrick Chapman
+//rodrick.chapman@okstate.edu | rodrick@rodlogic.com
+
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -32,7 +36,9 @@ namespace ArcRx
     public abstract class StandardMethod<T> : RequestMethod
         where T : StandardMethod<T>, new()
     {
-        public static T Instance = new T();        
+        public static T Instance = new T();
+
+        public static Func<T> Production = () => new T();      
     }
 
     public struct AbstractStandardMethod
@@ -49,111 +55,66 @@ namespace ArcRx
         public static implicit operator RequestMethod (AbstractStandardMethod some) => some.method;
     }
 
+    /// <summary>
+    /// Represents the standard HTTP GET method. Applications should create only a single instance.
+    /// </summary>
     public sealed class Get : StandardMethod<Get>
     {
         public interface Allowed { Representation Accept(Get method, HttpContextEx ctx); }
         public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
+    /// <summary>
+    /// Represents the standard HTTP HEAD method. Applications should create only a single instance.
+    /// </summary>
     public sealed class Head : StandardMethod<Head>
     {
         public interface Allowed { Representation Accept(Head method, HttpContextEx ctx); }
         public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
+    /// <summary>
+    /// Represents the standard HTTP DELETE method. Applications should create only a single instance.
+    /// </summary>
     public sealed class Delete : StandardMethod<Delete>
     {
         public interface Allowed { Representation Accept(Delete method, HttpContextEx ctx); }
         public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
+    /// <summary>
+    /// Represents the standard HTTP CONNECT method. Applications should create only a single instance.
+    /// </summary>
     public sealed class Connect : StandardMethod<Connect>
     {
         public interface Allowed { Representation Accept(Connect method, HttpContextEx ctx); }
         public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
+    /// <summary>
+    /// Represents the standard HTTP POST method. This method guards against cross site request forgery. Applications should create only a single instance.
+    /// </summary>
     public sealed class Post : StandardMethod<Post>
     {
-        sealed class AntiForgeryGuarded<T> : HttpContextEx
-        {
-            public bool FooBar => true;
-
-            public AntiForgeryGuarded(HttpContextEx ctx, AppRoute<T>.AppState app_state) : base(ctx) { }
-
-            sealed class GuardedRequest :HttpRequestBase
-            {
-                readonly GuardedForm guarded_form;
-                readonly GuardedForm guarded_querystring;
-
-                public GuardedRequest(HttpContextEx ctx)
-                {
-                    guarded_form = new GuardedForm(ctx.Request.Form);
-                    guarded_querystring = new GuardedForm(ctx.Request.QueryString);
-                }
-
-                sealed class GuardedForm : NameValueCollection
-                {
-                    string antiforgery;
-
-                    public GuardedForm(NameValueCollection xs) : base(xs) { }
-                    
-                    public override string Get(int index)
-                    {
-                        if (antiforgery == null)
-                        {
-                            antiforgery = base["ANTIFORGERY"];
-
-                            if (string.IsNullOrWhiteSpace(antiforgery))
-                                throw new Exception("Missing Anti Forgery Token");
-
-                            try
-                            {
-                                antiforgery = Encoding.ASCII.GetString(MachineKey.Unprotect(Encoding.ASCII.GetBytes(antiforgery), "CSRF Mitigation"));
-                               
-                                //TODO: check anti_forgery for validity.
-                            }
-
-                            #pragma warning disable
-                            catch (Exception ex)
-                            {
-                                throw;
-                            }
-
-                            #pragma warning restore
-                        }
-
-                        return Get(index);
-                    }
-
-                    public override string Get(string name)
-                    {
-                        for (var i = 0; i < this.AllKeys.Length; i++)
-                            if (this.AllKeys[i].Equals(name, StringComparison.OrdinalIgnoreCase))
-                                return Get(i);
-
-                        throw new IndexOutOfRangeException($"The key {name} is not present.");
-                    }
-                }
-
-                public override NameValueCollection Form => guarded_form;
-                public override NameValueCollection QueryString => guarded_querystring;
-            }
-        }
-
         public interface Allowed { Representation Accept(Post method, HttpContextEx ctx); }
         public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, new AntiForgeryGuarded<T>(ctx, exp)) ?? exp.ApplyUknown(this, ctx);
     }
 
+    /// <summary>
+    /// Represents the standard HTTP TRACE method. Applications should create only a single instance.
+    /// </summary>
     public sealed class Trace : StandardMethod<Trace>
     {
         public interface Allowed { Representation Accept(Trace method, HttpContextEx ctx); }
         public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
     }
 
+    /// <summary>
+    /// Represents the standard HTTP PUT method. Applications should create only a single instance.
+    /// </summary>
     public sealed class Put : StandardMethod<Put>
     {
         public interface Allowed { Representation Accept(Put method, HttpContextEx ctx); }
-        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, ctx) ?? exp.ApplyUknown(this, ctx);
+        public override Representation Apply<T>(AppRoute<T>.AppState exp, HttpContextEx ctx) => (exp as Allowed)?.Accept(this, new AntiForgeryGuarded<T>(ctx, exp)) ?? exp.ApplyUknown(this, ctx);
     }
 }

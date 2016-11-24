@@ -1,4 +1,8 @@
-﻿using System;
+﻿//Author:Rodrick Chapman
+//rodrick.chapman@okstate.edu | rodrick@rodlogic.com
+
+
+using System;
 using System.Web;
 using System.Linq;
 using System.Collections.Generic;

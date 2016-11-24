@@ -1,4 +1,8 @@
-﻿using System;
+﻿//Author:Rodrick Chapman
+//rodrick.chapman@okstate.edu | rodrick@rodlogic.com
+
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -56,11 +60,11 @@ namespace ArcRx
             }
         }
 
-        public /*unsealed*/ class MessageNotUnderstood : AppState, Get.Allowed, Post.Allowed
+        public /*unsealed*/ class MessageNotUnderstood : AppState, 
+            Get.Allowed, Post.Allowed, Trace.Allowed, Connect.Allowed, Delete.Allowed, Put.Allowed, Head.Allowed
         {
             protected readonly HttpContextEx context;
             protected readonly Token token;
-
 
             public MessageNotUnderstood(HttpContextEx context, Token t)
             {
@@ -69,14 +73,17 @@ namespace ArcRx
             }
 
             public Representation Accept(Get method, HttpContextEx ctx) => GetRepresentation(ctx);
+            public Representation Accept(Put method, HttpContextEx ctx) => GetRepresentation(ctx);
+            public Representation Accept(Head method, HttpContextEx ctx) => GetRepresentation(ctx);
             public Representation Accept(Post method, HttpContextEx ctx) => GetRepresentation(ctx);
-            
+            public Representation Accept(Trace method, HttpContextEx ctx) => GetRepresentation(ctx);
+            public Representation Accept(Delete method, HttpContextEx ctx) => GetRepresentation(ctx);
+            public Representation Accept(Connect method, HttpContextEx ctx) => GetRepresentation(ctx);
 
             public override AppState Consider(Token token) => this;
 
             protected override Representation GetRepresentation(HttpContextEx context)
             {
-
                 return new AdHocRepresentation(ctx =>
                             {
                                 ctx.Response.StatusCode = 404;
@@ -92,6 +99,7 @@ namespace ArcRx
 
         public abstract void ProcessRequest(HttpContext context);
 
+        //For the benefit of F# since it can't dynamically cast to an interface as far as I can tell
         public T Become<T>() where T : class => this as T;
 
         public virtual Representation GetNegotiatedRepresentation(MediaType media_type) => media_type.Convert(this);
@@ -155,12 +163,8 @@ namespace ArcRx
 
             app.Application.Add("MIME_MAPPING_MEMO", mime_mapping_cache);
 
-
-            (this.app = app).PostResolveRequestCache += MapRequest;
-
-            
+            (this.app = app).PostResolveRequestCache += MapRequest;            
         }
-
         
         protected abstract AppState GetRoot(HttpContext context);
         protected virtual AppState TranslateNull(HttpContextEx context, AppState appState, Token token) => appState ?? new MessageNotUnderstood(context, token);
@@ -188,7 +192,10 @@ namespace ArcRx
                     catch (AppException ex)
                     {
                         if (ex.HandleAsHTTP)
+                        {
                             curr = ex;
+                            break;
+                        }
                     }
                 }
 
@@ -203,8 +210,6 @@ namespace ArcRx
                         if(mime_mapping !=null)
                         {
                             var requested_types = context.Request.AcceptTypes;
-
-                            var media_type_objects = new List<MediaType>();
 
                             foreach (var type in requested_types)
                             {
@@ -222,7 +227,6 @@ namespace ArcRx
                                 }
                             }
                         }
-
 
                         context.RemapHandler(rep);                        
                     }

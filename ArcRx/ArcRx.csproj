@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppRoute.cs" />
+    <Compile Include="Header.cs" />
     <Compile Include="HttpContextEx.cs" />
     <Compile Include="MediaType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
