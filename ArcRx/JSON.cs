@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace ArcRx
 {
+    [RecognizedMimeType("application/json")]
     public sealed class JSON : MediaType<JSON>
     {
         public new abstract class Representation : MediaType<JSON>.Representation

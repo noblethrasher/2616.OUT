@@ -1,4 +1,7 @@
-﻿using System;
+﻿//Author:Rodrick Chapman
+//rodrick.chapman@okstate.edu | rodrick@rodlogic.com
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -15,6 +18,7 @@ using System.Web.Configuration;
 using System.Web.Instrumentation;
 using System.Web.Profile;
 using System.Web.Routing;
+using System.Web.Security;
 using System.Web.SessionState;
 using System.Web.WebSockets;
 
@@ -469,5 +473,72 @@ namespace ArcRx
         public override string WebSocketNegotiatedProtocol =>  context.WebSocketNegotiatedProtocol;
 
         public override IList<string> WebSocketRequestedProtocols => context.WebSocketRequestedProtocols;
+    }
+
+    internal sealed class AntiForgeryGuarded<T> : HttpContextEx
+    {
+        public bool FooBar => true;
+
+        public AntiForgeryGuarded(HttpContextEx ctx, AppRoute<T>.AppState app_state) : base(ctx) { }
+
+        sealed class GuardedRequest : HttpRequestBase
+        {
+            readonly GuardedForm guarded_form;
+            readonly GuardedForm guarded_querystring;
+
+            public GuardedRequest(HttpContextEx ctx)
+            {
+                guarded_form = new GuardedForm(ctx.Request.Form);
+                guarded_querystring = new GuardedForm(ctx.Request.QueryString);
+            }
+
+            sealed class GuardedForm : NameValueCollection
+            {
+                string antiforgery;
+
+                public GuardedForm(NameValueCollection xs) : base(xs) { }
+
+                public override string Get(int index)
+                {
+                    if (antiforgery == null)
+                    {
+                        antiforgery = base["ANTIFORGERY"];
+
+                        if (string.IsNullOrWhiteSpace(antiforgery))
+                            throw new Exception("Missing Anti Forgery Token");
+
+                        try
+                        {
+                            antiforgery = Encoding.ASCII.GetString(MachineKey.Unprotect(Encoding.ASCII.GetBytes(antiforgery), "CSRF Mitigation"));
+
+                            //TODO: check anti_forgery for validity.
+                        }
+
+                        #pragma warning disable
+
+                        catch (Exception ex)
+                        {
+                            throw;
+                        }
+
+                        #pragma warning restore
+                    }
+
+                    return Get(index);
+                }
+
+                public override string Get(string name)
+                {
+                    for (var i = 0; i < this.AllKeys.Length; i++)
+                        if (this.AllKeys[i].Equals(name, StringComparison.OrdinalIgnoreCase))
+                            return Get(i);
+
+                    throw new IndexOutOfRangeException($"The key {name} is not present.");
+                }
+            }
+
+            public override NameValueCollection Form => guarded_form;
+            public override NameValueCollection QueryString => guarded_querystring;
+        }
     }
 }

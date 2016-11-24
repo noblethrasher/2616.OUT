@@ -12,6 +12,12 @@
                 let result = x.Become<'a>()
 
                 if result <> null then Some result else None
+
+            member x.become2<'a when 'a : null> () =
+                let o = x :> System.Object
+                match o with
+                | :? 'a -> o :?> 'a
+                | _ -> null
         
         
         let inline str o = o.ToString()
