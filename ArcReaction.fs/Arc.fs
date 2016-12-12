@@ -25,7 +25,7 @@
         let (|Int|NonNegativeInt|Word|Guid|) obj =
             let s = obj.ToString()
             match Int32.TryParse(s) with
-            | (true, n) -> if n >= 0 then Int n else NonNegativeInt n
+            | (true, n) -> if n >= 0 then NonNegativeInt n else  Int n
             | _  -> 
                     match Guid.TryParse(s) with
                     | (true, g) -> Guid g
