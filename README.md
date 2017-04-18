@@ -7,8 +7,8 @@ What distinquishes the project from other web "framworks" is that it is designed
 
 The express purpose of goal of this project is to have a simple-to-use architectural framework that will last for 100 years. This is not  hubris, because:
 
-    1. The design is already done and articulated in the form of RFC2616
-    2. That design is only on version 1.1 even as it approaches it's 20th anniversary.
+1. The design is already done and articulated in the form of RFC2616
+2. That design is only on version 1.1 even as it approaches it's 20th anniversary.
 
 
 
