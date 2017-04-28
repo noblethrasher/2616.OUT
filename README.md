@@ -8,7 +8,7 @@ What distinquishes the project from other web "frameworks" is that it is designe
 The express goal of this project is to realize a simple-to-use architectural framework that will last for [100 years](http://www.paulgraham.com/hundred.html). This is not  hubris, because:
 
 1. The design is already done and articulated in the form of RFC2616 ***and***
-2. RFC2616 is a manifestly successful specification, yet has not been modified much (it's only at version 1.1), even as it approaches it's 20th anniversary.
+2. RFC2616 is a manifestly successful specification, yet has not been modified much (it's only at version 1.1), even as it approaches its 20th anniversary.
 
 
 
