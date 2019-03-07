@@ -22,7 +22,7 @@ The main idea is that the explosion of web applicaton frameworks just might be s
 
 ## How REST makes programming scalable
 
-Most of the literature on REST and HTTP focuses on its scalability story with respect to concurrent clients, so I won't bother to relitigate that here. Suffice to say, RFC2616.OUT inherits all of the scalability features of HTTP/REST, to the degree that it faithfully recapitulates the spec. But, what I want to talk about are the ways in which the REST architectural style make it easy to write programs in genreral.
+Most of the literature on REST and HTTP focuses on its scalability story with respect to concurrent clients, so I won't bother to relitigate that here. Suffice to say, RFC2616.OUT inherits all of the scalability features of HTTP/REST, to the degree that it faithfully refines the spec. But, what I want to talk about are the ways in which the REST architectural style make it easy to write programs in genreral.
 
 ### Editing Code
 
